@@ -2,7 +2,7 @@ package com.hnuttin.aoc2019.day2
 
 import org.scalatest.FunSuite
 
-class IntcodeProgramTest extends FunSuite {
+class IntcodeTest extends FunSuite {
 
 	test("1,0,0,0,99") {
 		assertExecution(List(1, 0, 0, 0, 99), List(2, 0, 0, 0, 99))
