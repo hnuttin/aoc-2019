@@ -26,7 +26,6 @@ class IntcodeTest extends FunSuite {
 
 	private def assertExecution(input: List[Int], expected: List[Int]): Any = {
 		val result = new Intcode(input).execute()
-		println(result.codes)
 		assert(result.codes.equals(expected))
 	}
 
