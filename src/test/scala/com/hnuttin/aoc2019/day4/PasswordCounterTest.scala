@@ -9,7 +9,7 @@ class PasswordCounterTest extends FunSuite {
 	}
 
 	test("count example2") {
-		assert(PasswordCounter.countValidBetween(123456, 123556) == 5)
+		assert(PasswordCounter.countValidBetween(123456, 123556) == 4)
 	}
 
 }

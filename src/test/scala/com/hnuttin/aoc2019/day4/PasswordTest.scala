@@ -4,16 +4,16 @@ import org.scalatest.FunSuite
 
 class PasswordTest extends FunSuite {
 
-	test("111111 is valid") {
-		assert(isValid(111111))
+	test("111111 is invalid") {
+		assert(isInvalid(111111))
 	}
 
 	test("122345 is valid") {
 		assert(isValid(122345))
 	}
 
-	test("111123 is valid") {
-		assert(isValid(111123))
+	test("111123 is invalid") {
+		assert(isInvalid(111123))
 	}
 
 	test("135579 is valid") {
@@ -26,6 +26,22 @@ class PasswordTest extends FunSuite {
 
 	test("123789 is invalid") {
 		assert(isInvalid(123789))
+	}
+
+	test("123339 is invalid") {
+		assert(isInvalid(123339))
+	}
+
+	test("123444 is invalid") {
+		assert(isInvalid(123444))
+	}
+
+	test("112233 is valid") {
+		assert(isValid(112233))
+	}
+
+	test("111122 is valid") {
+		assert(isValid(111122))
 	}
 
 	private def isValid(value: Int) = {

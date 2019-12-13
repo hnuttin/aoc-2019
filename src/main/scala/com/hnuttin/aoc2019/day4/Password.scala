@@ -6,26 +6,38 @@ class Password(val value: Int) {
 		new Password(value + 1)
 	}
 
-	def isValid(min: Int, max: Int): Boolean = isSixDigits && isWithinRange(min, max) && hasTwoAdjacentDigits && digitsNeverDecrease
+	def isValid(min: Int, max: Int): Boolean = isSixDigits && isWithinRange(min, max) && hasExactlyTwoAdjacentDigits && digitsNeverDecrease
 
 	private def valueAsString: String = String.valueOf(value)
 
-	private def isSixDigits: Boolean = valueAsString.length == 6
+	private def digitLength = valueAsString.length
+
+	private def isSixDigits: Boolean = digitLength == 6
 
 	private def isWithinRange(min: Int, max: Int): Boolean = value > min && value < max
 
-	private def hasTwoAdjacentDigits: Boolean = hasTwoAdjacentDigitsFromPosition(0)
+	private def hasExactlyTwoAdjacentDigits: Boolean = hasExactlyTwoAdjacentDigitsFromPosition(0)
 
 	@scala.annotation.tailrec
-	private def hasTwoAdjacentDigitsFromPosition(position: Int): Boolean = {
-		if (positionAtEndOfValue(position)) false else areSameDigits(position) || hasTwoAdjacentDigitsFromPosition(position + 1)
+	private def hasExactlyTwoAdjacentDigitsFromPosition(position: Int): Boolean = {
+		if (noDigitAtPosition(position + 1)) {
+			false
+		} else {
+			hasExactlyTwoAdjacentValuesAtPosition(position) || hasExactlyTwoAdjacentDigitsFromPosition(position + 1)
+		}
 	}
 
-	private def positionAtEndOfValue(position: Int) = {
-		position + 1 >= valueAsString.length
+	private def hasExactlyTwoAdjacentValuesAtPosition(position: Int) = {
+		sameDigitAsNext(position) &&
+				(noDigitAtPosition(position + 2) || !sameDigitAsNext(position + 1)) &&
+				(noDigitAtPosition(position - 1) || !sameDigitAsNext(position - 1))
 	}
 
-	private def areSameDigits(position: Int) = {
+	private def noDigitAtPosition(position: Int) = {
+		position >= digitLength || position < 0
+	}
+
+	private def sameDigitAsNext(position: Int) = {
 		digitAtPosition(position) == digitAtPosition(position + 1)
 	}
 
@@ -35,7 +47,7 @@ class Password(val value: Int) {
 
 	@scala.annotation.tailrec
 	private def digitsNeverDecreaseFromPosition(previousValue: Int, position: Int): Boolean = {
-		if (position >= valueAsString.length) {
+		if (position >= digitLength) {
 			true
 		} else {
 			val currentValue = digitAtPosition(position)
