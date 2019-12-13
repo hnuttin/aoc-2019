@@ -2,16 +2,16 @@ package com.hnuttin.aoc2019.day5
 
 import com.hnuttin.aoc2019.day5.ParameterMode.ParameterMode
 
-object ParameterMode extends Enumeration {
-	type ParameterMode = Value
-	val POSITION, IMMEDIATE = Value
-}
-
 trait Opcode {
 	def operate(program: IntcodeProgram): Option[IntcodeProgram]
 }
 
-abstract class OpcodeWithParameterModes(modes: Array[ParameterMode]) extends Opcode {
+private object ParameterMode extends Enumeration {
+	type ParameterMode = Value
+	val POSITION, IMMEDIATE = Value
+}
+
+private abstract class OpcodeWithParameterModes(modes: Array[ParameterMode]) extends Opcode {
 	protected def getParameterValue(program: IntcodeProgram, paramPosition: Int): Int = {
 		program.getParameter(paramPosition, getModeForParamPosition(paramPosition))
 	}
@@ -21,7 +21,7 @@ abstract class OpcodeWithParameterModes(modes: Array[ParameterMode]) extends Opc
 	}
 }
 
-abstract class MathOpcode(modes: Array[ParameterMode]) extends OpcodeWithParameterModes(modes) {
+private abstract class MathOpcode(modes: Array[ParameterMode]) extends OpcodeWithParameterModes(modes) {
 	def mathOperate(program: IntcodeProgram, operator: (Int, Int) => Int): Option[IntcodeProgram] = {
 		val value1 = getParameterValue(program, 1)
 		val value2 = getParameterValue(program, 2)
@@ -31,16 +31,50 @@ abstract class MathOpcode(modes: Array[ParameterMode]) extends OpcodeWithParamet
 	}
 }
 
-private class AddOpCode(modes: Array[ParameterMode]) extends MathOpcode(modes) {
+private class AddOpcode(modes: Array[ParameterMode]) extends MathOpcode(modes) {
 	override def operate(program: IntcodeProgram): Option[IntcodeProgram] = {
 		mathOperate(program, (x, y) => x + y)
 	}
 }
 
-private class MultiplyOpCode(modes: Array[ParameterMode]) extends MathOpcode(modes) {
+private class MultiplyOpcode(modes: Array[ParameterMode]) extends MathOpcode(modes) {
 	override def operate(program: IntcodeProgram): Option[IntcodeProgram] = {
 		mathOperate(program, (x, y) => x * y)
 	}
+}
+
+private class LessThanOpcode(modes: Array[ParameterMode]) extends MathOpcode(modes) {
+	override def operate(program: IntcodeProgram): Option[IntcodeProgram] = {
+		mathOperate(program, (x, y) => if (x < y) 1 else 0)
+	}
+}
+
+private class EqualsOpcode(modes: Array[ParameterMode]) extends MathOpcode(modes) {
+	override def operate(program: IntcodeProgram): Option[IntcodeProgram] = {
+		mathOperate(program, (x, y) => if (x == y) 1 else 0)
+	}
+}
+
+abstract private class JumpOpcode(modes: Array[ParameterMode]) extends OpcodeWithParameterModes(modes) {
+	override def operate(program: IntcodeProgram): Option[IntcodeProgram] = {
+		val value = getParameterValue(program, 1)
+		if (shouldJump(value)) {
+			val newPointerPosition = getParameterValue(program, 2)
+			Option(program.setPointer(newPointerPosition))
+		} else {
+			Option(program.incrementPointer(3))
+		}
+	}
+
+	protected def shouldJump(value: Int): Boolean
+}
+
+private class JumpIfTrueOpcode(modes: Array[ParameterMode]) extends JumpOpcode(modes) {
+	override protected def shouldJump(value: Int): Boolean = value != 0
+}
+
+private class JumpIfFalseOpcode(modes: Array[ParameterMode]) extends JumpOpcode(modes) {
+	override protected def shouldJump(value: Int): Boolean = value == 0
 }
 
 private class InputOpCode extends Opcode {
@@ -87,10 +121,14 @@ object Opcode {
 
 	private def constructOpCode(op: Int, modes: Array[ParameterMode.ParameterMode]): Opcode = {
 		op match {
-			case 1 => new AddOpCode(modes)
-			case 2 => new MultiplyOpCode(modes)
+			case 1 => new AddOpcode(modes)
+			case 2 => new MultiplyOpcode(modes)
 			case 3 => new InputOpCode()
 			case 4 => new OutputOpCode(modes)
+			case 5 => new JumpIfTrueOpcode(modes)
+			case 6 => new JumpIfFalseOpcode(modes)
+			case 7 => new LessThanOpcode(modes)
+			case 8 => new EqualsOpcode(modes)
 			case 99 => new HaltingOpCode()
 		}
 	}

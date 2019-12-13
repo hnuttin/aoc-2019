@@ -2,7 +2,11 @@ package com.hnuttin.aoc2019.day5
 
 import com.hnuttin.aoc2019.day5.ParameterMode.ParameterMode
 
-class IntcodeProgram(val codes: List[Int], instructionPointer: Int) {
+class IntcodeProgram private(val codes: List[Int], instructionPointer: Int) {
+
+	def this(codes: List[Int]) {
+		this(codes, 0)
+	}
 
 	def execute(): Unit = {
 		Opcode.parse(codes(instructionPointer))
@@ -24,6 +28,10 @@ class IntcodeProgram(val codes: List[Int], instructionPointer: Int) {
 
 	def incrementPointer(pointerIncrement: Int): IntcodeProgram = {
 		new IntcodeProgram(codes, instructionPointer + pointerIncrement)
+	}
+
+	def setPointer(instructionPointer: Int): IntcodeProgram = {
+		new IntcodeProgram(codes, instructionPointer)
 	}
 
 }
