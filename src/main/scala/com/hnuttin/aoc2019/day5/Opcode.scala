@@ -79,18 +79,15 @@ private class JumpIfFalseOpcode(modes: Array[ParameterMode]) extends JumpOpcode(
 
 private class InputOpCode extends Opcode {
 	override def operate(program: IntcodeProgram): Option[IntcodeProgram] = {
-		println("Input required: ")
-		val input = Integer.parseInt(scala.io.StdIn.readLine())
 		val positionToReplace = program.getParameter(1, ParameterMode.IMMEDIATE)
-		Option(program.transformAndIncrementPointer(positionToReplace, input, 2))
+		Option(program.transformWithInputAndIncrementPointer(positionToReplace, 2))
 	}
 }
 
 private class OutputOpCode(modes: Array[ParameterMode]) extends OpcodeWithParameterModes(modes) {
 	override def operate(program: IntcodeProgram): Option[IntcodeProgram] = {
 		val output = getParameterValue(program, 1)
-		println("Output: " + output)
-		Option(program.incrementPointer(2))
+		Option(program.incrementPointerAndAddOutput(2, output))
 	}
 }
 
