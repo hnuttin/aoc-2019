@@ -6,6 +6,8 @@ class Layer(val lines: List[List[Int]]) {
 		lines.flatten.count(pixel => pixel == digit)
 	}
 
+	def pixelAtPosition(x: Int, y: Int): Int = lines(y)(x)
+
 }
 
 class NumberOfDigitsOrdering(val digit: Int) extends Ordering[Layer] {
@@ -14,9 +16,30 @@ class NumberOfDigitsOrdering(val digit: Int) extends Ordering[Layer] {
 
 class Image(val layers: List[Layer]) {
 
+	def decode(): Unit = {
+		for (y <- 0 until resolution.height) {
+			for (x <- 0 until resolution.width) {
+				decodePixel(x, y)
+			}
+			println()
+		}
+	}
+
 	def calculateChecksum(): Int = {
 		val layerWithFewestZeros = layers.min(new NumberOfDigitsOrdering(0))
 		layerWithFewestZeros.numberOfDigits(1) * layerWithFewestZeros.numberOfDigits(2)
+	}
+
+	def resolution: Resolution = new Resolution(layers.head.lines.head.length, layers.head.lines.length)
+
+	private def decodePixel(x: Int, y: Int): Unit = {
+		val pixelChar = layers
+				.map(layer => layer.pixelAtPosition(x, y))
+				.find(pixel => pixel < 2)
+				.map(pixel => if (pixel == 1) '█' else ' ')
+				.get
+		print(pixelChar)
+		print(' ')
 	}
 
 }
@@ -59,7 +82,7 @@ object Image {
 		lineAccum.appended(firstCharAsInteger(dataLeft))
 	}
 
-	private def firstCharAsInteger(dataLeft: String) = {
-		Integer.parseInt(dataLeft.substring(0, 1))
+	private def firstCharAsInteger(dataLeft: String): Int = {
+		Integer.parseInt(dataLeft.split("").head)
 	}
 }
