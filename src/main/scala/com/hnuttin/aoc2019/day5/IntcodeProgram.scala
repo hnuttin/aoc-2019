@@ -2,28 +2,18 @@ package com.hnuttin.aoc2019.day5
 
 import com.hnuttin.aoc2019.day5.ParameterMode.ParameterMode
 
-class IntcodeProgram private(val codes: List[Int], val instructionPointer: Int, val inputs: List[Int], val output: Option[Int]) {
+class IntcodeProgram private(val codes: List[Int], val instructionPointer: Int, val output: Option[Int]) {
 
-	def this(codes: List[Int], inputs: List[Int]) {
-		this(codes, 0, inputs: List[Int], Option.empty)
+	def this(codes: List[Int]) {
+		this(codes, 0, Option.empty)
 	}
 
-	def executeUntilHalted(): Int = {
-		val newProgram = Opcode.parse(codes(instructionPointer)).operate(this)
-		if (newProgram.isDefined) newProgram.get.executeUntilHalted() else output.getOrElse(0)
+	def executeUntilHalted(inputs: List[Int]): Int = {
+		Opcode.parse(codes(instructionPointer)).executeUntilHalted(this, inputs)
 	}
 
-	def executeUntilOutputOrHalted(): (Option[Int], Option[IntcodeProgram]) = {
-		val newProgram = Opcode.parse(codes(instructionPointer)).operate(this)
-		if (newProgram.isDefined) {
-			if (newProgram.get.output.isDefined) {
-				Tuple2(newProgram.get.output, newProgram)
-			} else {
-				newProgram.get.executeUntilOutputOrHalted()
-			}
-		} else {
-			Tuple2(output, Option.empty)
-		}
+	def executeUntilOutputOrHalted(inputs: List[Int]): (Option[Int], Option[IntcodeProgram]) = {
+		Opcode.parse(codes(instructionPointer)).executeUntilOutputOrHalted(this, inputs)
 	}
 
 	def getParameter(paramPosition: Int, parameterMode: ParameterMode): Int = {
@@ -35,25 +25,23 @@ class IntcodeProgram private(val codes: List[Int], val instructionPointer: Int, 
 	}
 
 	def transformAndIncrementPointer(positionToReplace: Int, value: Int, pointerIncrement: Int): IntcodeProgram = {
-		new IntcodeProgram(codes.updated(positionToReplace, value), instructionPointer + pointerIncrement, inputs, output)
+		new IntcodeProgram(codes.updated(positionToReplace, value), instructionPointer + pointerIncrement, output)
 	}
 
-	def transformWithInputAndIncrementPointer(positionToReplace: Int, pointerIncrement: Int): IntcodeProgram = {
-		new IntcodeProgram(codes.updated(positionToReplace, inputs.head), instructionPointer + pointerIncrement, inputs.tail, output)
+	def transformWithInputAndIncrementPointer(input: Int, positionToReplace: Int, pointerIncrement: Int): IntcodeProgram = {
+		new IntcodeProgram(codes.updated(positionToReplace, input), instructionPointer + pointerIncrement, output)
 	}
 
 	def incrementPointer(pointerIncrement: Int): IntcodeProgram = {
-		new IntcodeProgram(codes, instructionPointer + pointerIncrement, inputs, output)
+		new IntcodeProgram(codes, instructionPointer + pointerIncrement, output)
 	}
 
-	def incrementPointerAndAddOutput(pointerIncrement: Int, output: Int): IntcodeProgram = {
-		new IntcodeProgram(codes, instructionPointer + pointerIncrement, inputs, Option(output))
+	def incrementPointerAndAddOutput(pointerIncrement: Int, newOutput: Int): IntcodeProgram = {
+		new IntcodeProgram(codes, instructionPointer + pointerIncrement, Option(newOutput))
 	}
 
 	def setPointer(instructionPointer: Int): IntcodeProgram = {
-		new IntcodeProgram(codes, instructionPointer, inputs, output)
+		new IntcodeProgram(codes, instructionPointer, output)
 	}
-
-	def withNewInputs(newInputs: List[Int]) = new IntcodeProgram(codes, instructionPointer, newInputs, Option.empty)
 
 }

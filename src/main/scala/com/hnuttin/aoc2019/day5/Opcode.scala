@@ -2,8 +2,28 @@ package com.hnuttin.aoc2019.day5
 
 import com.hnuttin.aoc2019.day5.ParameterMode.ParameterMode
 
-trait Opcode {
-	def operate(program: IntcodeProgram): Option[IntcodeProgram]
+abstract class Opcode {
+	def executeUntilHalted(program: IntcodeProgram, inputs: List[Int]): Int = {
+		val newProgram = operate(program, inputs)
+		if (newProgram.isDefined) newProgram.get.executeUntilHalted(newInputs(inputs)) else program.output.getOrElse(0)
+	}
+
+	protected def newInputs(inputs: List[Int]): List[Int] = inputs
+
+	def executeUntilOutputOrHalted(program: IntcodeProgram, inputs: List[Int]): (Option[Int], Option[IntcodeProgram]) = {
+		val newProgram = operate(program, inputs)
+		if (newProgram.isDefined) {
+			if (newProgram.get.output.isDefined) {
+				Tuple2(newProgram.get.output, newProgram)
+			} else {
+				newProgram.get.executeUntilOutputOrHalted(newInputs(inputs))
+			}
+		} else {
+			Tuple2(program.output, Option.empty)
+		}
+	}
+
+	protected def operate(program: IntcodeProgram, inputs: List[Int]): Option[IntcodeProgram]
 }
 
 private object ParameterMode extends Enumeration {
@@ -32,31 +52,31 @@ private abstract class MathOpcode(modes: Array[ParameterMode]) extends OpcodeWit
 }
 
 private class AddOpcode(modes: Array[ParameterMode]) extends MathOpcode(modes) {
-	override def operate(program: IntcodeProgram): Option[IntcodeProgram] = {
+	override def operate(program: IntcodeProgram, inputs: List[Int]): Option[IntcodeProgram] = {
 		mathOperate(program, (x, y) => x + y)
 	}
 }
 
 private class MultiplyOpcode(modes: Array[ParameterMode]) extends MathOpcode(modes) {
-	override def operate(program: IntcodeProgram): Option[IntcodeProgram] = {
+	override def operate(program: IntcodeProgram, inputs: List[Int]): Option[IntcodeProgram] = {
 		mathOperate(program, (x, y) => x * y)
 	}
 }
 
 private class LessThanOpcode(modes: Array[ParameterMode]) extends MathOpcode(modes) {
-	override def operate(program: IntcodeProgram): Option[IntcodeProgram] = {
+	override def operate(program: IntcodeProgram, inputs: List[Int]): Option[IntcodeProgram] = {
 		mathOperate(program, (x, y) => if (x < y) 1 else 0)
 	}
 }
 
 private class EqualsOpcode(modes: Array[ParameterMode]) extends MathOpcode(modes) {
-	override def operate(program: IntcodeProgram): Option[IntcodeProgram] = {
+	override def operate(program: IntcodeProgram, inputs: List[Int]): Option[IntcodeProgram] = {
 		mathOperate(program, (x, y) => if (x == y) 1 else 0)
 	}
 }
 
 abstract private class JumpOpcode(modes: Array[ParameterMode]) extends OpcodeWithParameterModes(modes) {
-	override def operate(program: IntcodeProgram): Option[IntcodeProgram] = {
+	override def operate(program: IntcodeProgram, inputs: List[Int]): Option[IntcodeProgram] = {
 		val value = getParameterValue(program, 1)
 		if (shouldJump(value)) {
 			val newPointerPosition = getParameterValue(program, 2)
@@ -78,21 +98,23 @@ private class JumpIfFalseOpcode(modes: Array[ParameterMode]) extends JumpOpcode(
 }
 
 private class InputOpCode extends Opcode {
-	override def operate(program: IntcodeProgram): Option[IntcodeProgram] = {
+	override def newInputs(inputs: List[Int]): List[Int] = inputs.tail
+
+	override def operate(program: IntcodeProgram, inputs: List[Int]): Option[IntcodeProgram] = {
 		val positionToReplace = program.getParameter(1, ParameterMode.IMMEDIATE)
-		Option(program.transformWithInputAndIncrementPointer(positionToReplace, 2))
+		Option(program.transformWithInputAndIncrementPointer(inputs.head, positionToReplace, 2))
 	}
 }
 
 private class OutputOpCode(modes: Array[ParameterMode]) extends OpcodeWithParameterModes(modes) {
-	override def operate(program: IntcodeProgram): Option[IntcodeProgram] = {
+	override def operate(program: IntcodeProgram, inputs: List[Int]): Option[IntcodeProgram] = {
 		val output = getParameterValue(program, 1)
 		Option(program.incrementPointerAndAddOutput(2, output))
 	}
 }
 
 private class HaltingOpCode extends Opcode {
-	override def operate(program: IntcodeProgram): Option[IntcodeProgram] = {
+	override def operate(program: IntcodeProgram, inputs: List[Int]): Option[IntcodeProgram] = {
 		Option.empty
 	}
 }
