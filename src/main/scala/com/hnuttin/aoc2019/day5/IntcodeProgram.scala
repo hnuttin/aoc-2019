@@ -36,7 +36,7 @@ class IntcodeProgram private(val codes: List[Int], val instructionPointer: Int, 
 		new IntcodeProgram(codes, instructionPointer + pointerIncrement, output)
 	}
 
-	def incrementPointerAndAddOutput(pointerIncrement: Int, newOutput: Int): IntcodeProgram = {
+	def incrementPointerAndSetOutput(pointerIncrement: Int, newOutput: Int): IntcodeProgram = {
 		new IntcodeProgram(codes, instructionPointer + pointerIncrement, Option(newOutput))
 	}
 

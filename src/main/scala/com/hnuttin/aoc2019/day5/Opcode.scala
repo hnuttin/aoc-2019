@@ -109,7 +109,7 @@ private class InputOpCode extends Opcode {
 private class OutputOpCode(modes: Array[ParameterMode]) extends OpcodeWithParameterModes(modes) {
 	override def operate(program: IntcodeProgram, inputs: List[Int]): Option[IntcodeProgram] = {
 		val output = getParameterValue(program, 1)
-		Option(program.incrementPointerAndAddOutput(2, output))
+		Option(program.incrementPointerAndSetOutput(2, output))
 	}
 }
 
