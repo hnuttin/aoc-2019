@@ -44,4 +44,8 @@ class IntcodeProgram private(val codes: List[Int], val instructionPointer: Int, 
 		new IntcodeProgram(codes, instructionPointer, output)
 	}
 
+	def clearOutput(): IntcodeProgram = {
+		new IntcodeProgram(codes, instructionPointer, Option.empty)
+	}
+
 }

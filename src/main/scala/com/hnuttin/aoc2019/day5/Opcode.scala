@@ -14,7 +14,7 @@ abstract class Opcode {
 		val newProgram = operate(program, inputs)
 		if (newProgram.isDefined) {
 			if (newProgram.get.output.isDefined) {
-				Tuple2(newProgram.get.output, newProgram)
+				Tuple2(newProgram.get.output, Option(newProgram.get.clearOutput()))
 			} else {
 				newProgram.get.executeUntilOutputOrHalted(newInputs(inputs))
 			}
