@@ -1,6 +1,6 @@
 package com.hnuttin.aoc2019.day7
 
-import com.hnuttin.aoc2019.day5.IntcodeProgram
+import com.hnuttin.aoc2019.day5.intcode.IntcodeProgram
 
 object AmplifierComputer {
 

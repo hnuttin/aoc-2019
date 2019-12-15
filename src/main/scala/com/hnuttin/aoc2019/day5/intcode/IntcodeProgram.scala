@@ -1,6 +1,6 @@
-package com.hnuttin.aoc2019.day5
+package com.hnuttin.aoc2019.day5.intcode
 
-import com.hnuttin.aoc2019.day5.ParameterMode.ParameterMode
+import com.hnuttin.aoc2019.day5.intcode.ParameterMode.ParameterMode
 
 class IntcodeProgram private(val codes: List[Int], val instructionPointer: Int, val output: Option[Int]) {
 
@@ -16,7 +16,7 @@ class IntcodeProgram private(val codes: List[Int], val instructionPointer: Int, 
 		Opcode.parse(codes(instructionPointer)).executeUntilOutputOrHalted(this, inputs)
 	}
 
-	def getParameter(paramPosition: Int, parameterMode: ParameterMode): Int = {
+	private[intcode] def getParameter(paramPosition: Int, parameterMode: ParameterMode): Int = {
 		val param = codes(instructionPointer + paramPosition)
 		parameterMode match {
 			case ParameterMode.POSITION => codes(param)
@@ -24,27 +24,27 @@ class IntcodeProgram private(val codes: List[Int], val instructionPointer: Int, 
 		}
 	}
 
-	def transformAndIncrementPointer(positionToReplace: Int, value: Int, pointerIncrement: Int): IntcodeProgram = {
+	private[intcode] def transformAndIncrementPointer(positionToReplace: Int, value: Int, pointerIncrement: Int): IntcodeProgram = {
 		new IntcodeProgram(codes.updated(positionToReplace, value), instructionPointer + pointerIncrement, output)
 	}
 
-	def transformWithInputAndIncrementPointer(input: Int, positionToReplace: Int, pointerIncrement: Int): IntcodeProgram = {
+	private[intcode] def transformWithInputAndIncrementPointer(input: Int, positionToReplace: Int, pointerIncrement: Int): IntcodeProgram = {
 		new IntcodeProgram(codes.updated(positionToReplace, input), instructionPointer + pointerIncrement, output)
 	}
 
-	def incrementPointer(pointerIncrement: Int): IntcodeProgram = {
+	private[intcode] def incrementPointer(pointerIncrement: Int): IntcodeProgram = {
 		new IntcodeProgram(codes, instructionPointer + pointerIncrement, output)
 	}
 
-	def incrementPointerAndSetOutput(pointerIncrement: Int, newOutput: Int): IntcodeProgram = {
+	private[intcode] def incrementPointerAndSetOutput(pointerIncrement: Int, newOutput: Int): IntcodeProgram = {
 		new IntcodeProgram(codes, instructionPointer + pointerIncrement, Option(newOutput))
 	}
 
-	def setPointer(instructionPointer: Int): IntcodeProgram = {
+	private[intcode] def setPointer(instructionPointer: Int): IntcodeProgram = {
 		new IntcodeProgram(codes, instructionPointer, output)
 	}
 
-	def clearOutput(): IntcodeProgram = {
+	private[intcode] def clearOutput(): IntcodeProgram = {
 		new IntcodeProgram(codes, instructionPointer, Option.empty)
 	}
 

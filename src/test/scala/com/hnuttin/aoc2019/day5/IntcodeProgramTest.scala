@@ -1,5 +1,6 @@
 package com.hnuttin.aoc2019.day5
 
+import com.hnuttin.aoc2019.day5.intcode.IntcodeProgram
 import org.scalatest.FunSuite
 
 class IntcodeProgramTest extends FunSuite {
