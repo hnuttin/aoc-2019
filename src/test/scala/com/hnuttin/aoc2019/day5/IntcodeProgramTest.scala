@@ -70,11 +70,11 @@ class IntcodeProgramTest extends FunSuite {
 	}
 
 	test("1002,4,3,4,33") {
-		new IntcodeProgram(List(1002, 4, 3, 4, 33)).executeUntilHalted(List())
+		IntcodeProgram.fromIntcode(List(1002, 4, 3, 4, 33)).executeUntilHalted(List())
 	}
 
 	private def assertProgram(intcode: List[Int], input: Int, output: Int): Any = {
-		val program = new IntcodeProgram(intcode)
+		val program = IntcodeProgram.fromIntcode(intcode)
 		val output = program.executeUntilHalted(List(input))
 		assert(output == output)
 	}

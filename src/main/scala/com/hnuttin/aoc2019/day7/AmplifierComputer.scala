@@ -6,20 +6,20 @@ object AmplifierComputer {
 
 	val numberOfAmplifiers = 5
 
-	def calculateMaxBurst(intcode: List[Int]): Int = {
-		List.range(5, 10)
+	def calculateMaxBurst(intcode: List[Int]): Long = {
+		List.range(5L, 10L)
 				.permutations
 				.map(phases => calculateAmplifierSignal(intcode, phases))
 				.max
 	}
 
-	private def calculateAmplifierSignal(intcode: List[Int], phases: List[Int]): Int = {
-		val amplifiers = phases.map(phase => new IntcodeProgram(intcode))
+	private def calculateAmplifierSignal(intcode: List[Int], phases: List[Long]): Long = {
+		val amplifiers = phases.map(phase => IntcodeProgram.fromIntcode(intcode))
 		calculateAmplifierSignalAccum(amplifiers, phases, 0, 0)
 	}
 
 	@scala.annotation.tailrec
-	private def calculateAmplifierSignalAccum(amplifiers: List[IntcodeProgram], phases: List[Int], amplifierIndex: Int, input: Int): Int = {
+	private def calculateAmplifierSignalAccum(amplifiers: List[IntcodeProgram], phases: List[Long], amplifierIndex: Int, input: Long): Long = {
 		val inputs = if (phases.isEmpty) List(input) else List(phases.head, input)
 		val execution = amplifiers(amplifierIndex).executeUntilOutputOrHalted(inputs)
 		if (execution._2.isEmpty && amplifierIndex + 1 == numberOfAmplifiers) {
