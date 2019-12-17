@@ -23,12 +23,12 @@ object AmplifierComputer {
 		val inputs = if (phases.isEmpty) List(input) else List(phases.head, input)
 		val execution = amplifiers(amplifierIndex).executeUntilOutputOrHalted(inputs)
 		if (execution._2.isEmpty && amplifierIndex + 1 == numberOfAmplifiers) {
-			execution._1.getOrElse(input)
+			execution._1.last
 		} else {
 			val newAmplifiers = if (execution._2.isDefined) amplifiers.updated(amplifierIndex, execution._2.get) else amplifiers
 			val newAmplifierIndex = if (amplifierIndex + 1 == numberOfAmplifiers) 0 else amplifierIndex + 1
 			val newPhases = if (phases.isEmpty) phases else phases.tail
-			calculateAmplifierSignalAccum(newAmplifiers, newPhases, newAmplifierIndex, execution._1.getOrElse(input))
+			calculateAmplifierSignalAccum(newAmplifiers, newPhases, newAmplifierIndex, execution._1.last)
 		}
 	}
 

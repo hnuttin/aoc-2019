@@ -14,8 +14,12 @@ private object ParameterMode extends Enumeration {
 }
 
 private class Parameters(modes: Array[ParameterMode]) {
-	def get(program: IntcodeProgram, position: Long): Long = {
-		program.getParameter(position, getModeForPosition(position))
+	def getAsValue(program: IntcodeProgram, position: Long): Long = {
+		program.getParameterAsValue(position, getModeForPosition(position))
+	}
+
+	def getAsPosition(program: IntcodeProgram, position: Long): Long = {
+		program.getParameterAsPosition(position, getModeForPosition(position))
 	}
 
 	private def getModeForPosition(position: Long): ParameterMode = {
@@ -24,21 +28,21 @@ private class Parameters(modes: Array[ParameterMode]) {
 }
 
 private[intcode] abstract class Opcode {
-	def executeUntilHalted(program: IntcodeProgram, inputs: List[Long]): Long = {
+	def executeUntilHalted(program: IntcodeProgram, inputs: List[Long]): List[Long] = {
 		val newProgram = operate(program, inputs)
-		if (newProgram.isDefined) newProgram.get.executeUntilHalted(newInputs(inputs)) else program.output.getOrElse(0)
+		if (newProgram.isDefined) newProgram.get.executeUntilHalted(newInputs(inputs)) else program.outputs
 	}
 
-	def executeUntilOutputOrHalted(program: IntcodeProgram, inputs: List[Long]): (Option[Long], Option[IntcodeProgram]) = {
+	def executeUntilOutputOrHalted(program: IntcodeProgram, inputs: List[Long]): (List[Long], Option[IntcodeProgram]) = {
 		val newProgram = operate(program, inputs)
 		if (newProgram.isDefined) {
-			if (newProgram.get.output.isDefined) {
-				Tuple2(newProgram.get.output, Option(newProgram.get.clearOutput()))
+			if (program.outputs.length < newProgram.get.outputs.length) {
+				Tuple2(newProgram.get.outputs, Option(newProgram.get))
 			} else {
 				newProgram.get.executeUntilOutputOrHalted(newInputs(inputs))
 			}
 		} else {
-			Tuple2(program.output, Option.empty)
+			Tuple2(program.outputs, Option.empty)
 		}
 	}
 
@@ -49,10 +53,10 @@ private[intcode] abstract class Opcode {
 
 private abstract class MathOpcode(val parameters: Parameters) extends Opcode {
 	def mathOperate(program: IntcodeProgram, operator: (Long, Long) => Long): Option[IntcodeProgram] = {
-		val value1 = parameters.get(program, 1)
-		val value2 = parameters.get(program, 2)
+		val value1 = parameters.getAsValue(program, 1)
+		val value2 = parameters.getAsValue(program, 2)
 		val calculatedValue = operator.apply(value1, value2)
-		val positionToReplace = program.getParameter(3, ParameterMode.IMMEDIATE)
+		val positionToReplace = parameters.getAsPosition(program, 3)
 		Option(program.transformAndIncrementPointer(positionToReplace, calculatedValue, 4))
 	}
 }
@@ -83,9 +87,9 @@ private class EqualsOpcode(parameters: Parameters) extends MathOpcode(parameters
 
 abstract private class JumpOpcode(val parameters: Parameters) extends Opcode {
 	override def operate(program: IntcodeProgram, inputs: List[Long]): Option[IntcodeProgram] = {
-		val value = parameters.get(program, 1)
+		val value = parameters.getAsValue(program, 1)
 		if (shouldJump(value)) {
-			val newPointerPosition = parameters.get(program, 2)
+			val newPointerPosition = parameters.getAsValue(program, 2)
 			Option(program.setPointer(newPointerPosition))
 		} else {
 			Option(program.incrementPointer(3))
@@ -103,26 +107,25 @@ private class JumpIfFalseOpcode(parameters: Parameters) extends JumpOpcode(param
 	override protected def shouldJump(value: Long): Boolean = value == 0
 }
 
-private class RelativeBaseOpcode extends Opcode {
+private class RelativeBaseOpcode(val parameters: Parameters) extends Opcode {
 	override protected def operate(program: IntcodeProgram, inputs: List[Long]): Option[IntcodeProgram] = {
-		val relativeBaseIncrement = program.getParameter(1, ParameterMode.IMMEDIATE)
+		val relativeBaseIncrement = parameters.getAsValue(program, 1)
 		Option(program.incrementRelativeBaseAndIncrementPointer(relativeBaseIncrement, 2))
 	}
 }
 
-private class InputOpCode extends Opcode {
+private class InputOpCode(val parameters: Parameters) extends Opcode {
 	override def newInputs(inputs: List[Long]): List[Long] = inputs.tail
 
 	override def operate(program: IntcodeProgram, inputs: List[Long]): Option[IntcodeProgram] = {
-		val positionToReplace = program.getParameter(1, ParameterMode.IMMEDIATE)
+		val positionToReplace = parameters.getAsPosition(program, 1)
 		Option(program.transformAndIncrementPointer(positionToReplace, inputs.head, 2))
 	}
 }
 
 private class OutputOpCode(val parameters: Parameters) extends Opcode {
 	override def operate(program: IntcodeProgram, inputs: List[Long]): Option[IntcodeProgram] = {
-		val output = parameters.get(program, 1)
-		print(output)
+		val output = parameters.getAsValue(program, 1)
 		Option(program.incrementPointerAndSetOutput(2, output))
 	}
 }
@@ -153,13 +156,13 @@ private[intcode] object Opcode {
 		op match {
 			case 1 => new AddOpcode(new Parameters(modes))
 			case 2 => new MultiplyOpcode(new Parameters(modes))
-			case 3 => new InputOpCode()
+			case 3 => new InputOpCode(new Parameters(modes))
 			case 4 => new OutputOpCode(new Parameters(modes))
 			case 5 => new JumpIfTrueOpcode(new Parameters(modes))
 			case 6 => new JumpIfFalseOpcode(new Parameters(modes))
 			case 7 => new LessThanOpcode(new Parameters(modes))
 			case 8 => new EqualsOpcode(new Parameters(modes))
-			case 9 => new RelativeBaseOpcode
+			case 9 => new RelativeBaseOpcode(new Parameters(modes))
 			case 99 => new HaltingOpCode()
 		}
 	}

@@ -75,8 +75,8 @@ class IntcodeProgramTest extends FunSuite {
 
 	private def assertProgram(intcode: List[Int], input: Int, output: Int): Any = {
 		val program = IntcodeProgram.fromIntcode(intcode)
-		val output = program.executeUntilHalted(List(input))
-		assert(output == output)
+		val actualOutput = program.executeUntilHalted(List(input))
+		assert(actualOutput == List(output))
 	}
 
 }
