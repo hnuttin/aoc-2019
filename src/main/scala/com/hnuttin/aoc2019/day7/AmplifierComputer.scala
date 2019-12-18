@@ -21,14 +21,14 @@ object AmplifierComputer {
 	@scala.annotation.tailrec
 	private def calculateAmplifierSignalAccum(amplifiers: List[IntcodeProgram], phases: List[Long], amplifierIndex: Int, input: Long): Long = {
 		val inputs = if (phases.isEmpty) List(input) else List(phases.head, input)
-		val execution = amplifiers(amplifierIndex).executeUntilOutputOrHalted(inputs)
-		if (execution._2.isEmpty && amplifierIndex + 1 == numberOfAmplifiers) {
-			execution._1.last
+		val amplifier = amplifiers(amplifierIndex)
+		amplifier.executeUntilOutputOrHalted(inputs)
+		if (amplifier.halted && amplifierIndex + 1 == numberOfAmplifiers) {
+			amplifier.outputs.last
 		} else {
-			val newAmplifiers = if (execution._2.isDefined) amplifiers.updated(amplifierIndex, execution._2.get) else amplifiers
 			val newAmplifierIndex = if (amplifierIndex + 1 == numberOfAmplifiers) 0 else amplifierIndex + 1
 			val newPhases = if (phases.isEmpty) phases else phases.tail
-			calculateAmplifierSignalAccum(newAmplifiers, newPhases, newAmplifierIndex, execution._1.last)
+			calculateAmplifierSignalAccum(amplifiers, newPhases, newAmplifierIndex, amplifier.outputs.last)
 		}
 	}
 
