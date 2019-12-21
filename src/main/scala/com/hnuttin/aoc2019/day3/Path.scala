@@ -2,7 +2,8 @@ package com.hnuttin.aoc2019.day3
 
 import java.lang.Integer.parseInt
 
-import com.hnuttin.aoc2019.day3.Direction.Direction
+import com.hnuttin.aoc2019.common.Direction.Direction
+import com.hnuttin.aoc2019.common.{Coordinate, Direction}
 
 class Path(val coords: List[Coordinate]) {
 
@@ -43,11 +44,6 @@ object Path {
 	}
 }
 
-object Direction extends Enumeration {
-	type Direction = Value
-	val U, D, L, R = Value
-}
-
 class Movement(val direction: Direction, val steps: Int) {
 
 }
@@ -55,32 +51,5 @@ class Movement(val direction: Direction, val steps: Int) {
 object Movement {
 	def parse(input: String): Movement = {
 		new Movement(Direction.withName(input.substring(0, 1)), parseInt(input.substring(1)))
-	}
-}
-
-class Coordinate(val x: Int, val y: Int) {
-
-	def move(direction: Direction): Coordinate = {
-		direction match {
-			case Direction.U => new Coordinate(x, y + 1)
-			case Direction.D => new Coordinate(x, y - 1)
-			case Direction.L => new Coordinate(x - 1, y)
-			case Direction.R => new Coordinate(x + 1, y)
-		}
-	}
-
-	def canEqual(other: Any): Boolean = other.isInstanceOf[Coordinate]
-
-	override def equals(other: Any): Boolean = other match {
-		case that: Coordinate =>
-			(that canEqual this) &&
-					x == that.x &&
-					y == that.y
-		case _ => false
-	}
-
-	override def hashCode(): Int = {
-		val state = Seq(x, y)
-		state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
 	}
 }

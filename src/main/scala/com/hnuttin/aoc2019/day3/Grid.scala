@@ -1,5 +1,7 @@
 package com.hnuttin.aoc2019.day3
 
+import com.hnuttin.aoc2019.common.Coordinate
+
 class Grid(val port: Coordinate, val wire1: Path, val wire2: Path) {
 
 	def manhattenDistanceClosestIntersection: Int = {

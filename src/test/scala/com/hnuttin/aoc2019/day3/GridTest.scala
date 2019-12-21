@@ -1,5 +1,6 @@
 package com.hnuttin.aoc2019.day3
 
+import com.hnuttin.aoc2019.common.Coordinate
 import org.scalatest.FunSuite
 
 class GridTest extends FunSuite {
