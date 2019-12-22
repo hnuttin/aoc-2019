@@ -6,6 +6,24 @@ import com.hnuttin.aoc2019.common.Direction.Direction
 object Direction extends Enumeration {
 	type Direction = Value
 	val U, D, L, R = Value
+
+	def turnLeft(direction: Direction): Direction = {
+		direction match {
+			case Direction.U => Direction.L
+			case Direction.D => Direction.R
+			case Direction.L => Direction.D
+			case Direction.R => Direction.U
+		}
+	}
+
+	def turnRight(direction: Direction): Direction = {
+		direction match {
+			case Direction.U => Direction.R
+			case Direction.D => Direction.L
+			case Direction.L => Direction.U
+			case Direction.R => Direction.D
+		}
+	}
 }
 
 class Coordinate(val x: Int, val y: Int) {

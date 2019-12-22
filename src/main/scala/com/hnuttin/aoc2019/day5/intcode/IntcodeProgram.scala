@@ -16,6 +16,10 @@ class IntcodeProgram(private[intcode] var memory: Map[Long, Long]) {
 
 	def outputs: List[Long] = _outputs
 
+	def executeUntilHalted(): Unit = {
+		executeUntilHalted(List())
+	}
+
 	def executeUntilHalted(inputs: List[Long]): Unit = {
 		executeUntilHaltedRecursive(inputs)
 	}
@@ -28,6 +32,10 @@ class IntcodeProgram(private[intcode] var memory: Map[Long, Long]) {
 		} else {
 			executeUntilHaltedRecursive(newInputs)
 		}
+	}
+
+	def executeUntilOutputOrHalted(): Unit = {
+		executeUntilOutputOrHalted(List())
 	}
 
 	def executeUntilOutputOrHalted(inputs: List[Long]): Unit = {
