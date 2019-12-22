@@ -46,4 +46,21 @@ class Moon(var position: Coordinate3D, var velocity: Coordinate3D) {
 	def potentialEnergy: Int = position.x.abs + position.y.abs + position.z.abs
 
 	def kineticEnergy: Int = velocity.x.abs + velocity.y.abs + velocity.z.abs
+
+	def copy(): Moon = new Moon(position, velocity)
+
+	override def equals(other: Any): Boolean = other match {
+		case that: Moon =>
+			(that canEqual this) &&
+					position == that.position &&
+					velocity == that.velocity
+		case _ => false
+	}
+
+	def canEqual(other: Any): Boolean = other.isInstanceOf[Moon]
+
+	override def hashCode(): Int = {
+		val state = Seq(position, velocity)
+		state.map(_.hashCode()).foldLeft(0)((a, b) => 31 * a + b)
+	}
 }

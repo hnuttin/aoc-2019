@@ -52,4 +52,9 @@ class MoonsTest extends FunSuite {
 		assert(moons.totalEnergy == 1940)
 	}
 
+	test("loop day12") {
+		val moons = Moons.parse(Input.input)
+		moons.simulateLoop()
+	}
+
 }
