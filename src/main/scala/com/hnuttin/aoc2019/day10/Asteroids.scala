@@ -3,77 +3,71 @@ package com.hnuttin.aoc2019.day10
 import com.hnuttin.aoc2019.common.Coordinate
 import com.hnuttin.aoc2019.common.Coordinate.asCoord
 
-class Asteroid(val asteroidCoord: Coordinate) {
+class Asteroid(val coord: Coordinate) {
 
-	def constructVisibilityMap(asteroids: Asteroids, width: Int, height: Int): VisibilityMap = {
-		val visibleMap = VisibilityMap.initialize(width, height)
-		visibleMap.markStation(asteroidCoord)
-		List.range(0, height)
-				.flatMap(y => List.range(0, width).map(x => asCoord(x, y)))
-				.filter(coordinate => !coordinate.equals(asteroidCoord))
-				.foreach(coordinate => mark(visibleMap, asteroids, coordinate))
-		visibleMap
+	def getVisibleAsteroids(asteroids: Asteroids): VisibleAsteroids = {
+		val visibleAsteroids = VisibleAsteroids.initialize(asteroids.width, asteroids.height)
+		visibleAsteroids.markStation(coord)
+		List.range(0, asteroids.height)
+				.flatMap(y => List.range(0, asteroids.width).map(x => asCoord(x, y)))
+				.filter(coordinate => !coordinate.equals(coord))
+				.foreach(coordinate => mark(visibleAsteroids, asteroids, coordinate))
+		visibleAsteroids
 	}
 
-	private def mark(visibleMap: VisibilityMap, asteroids: Asteroids, currentCoord: Coordinate): Unit = {
+	override def toString: String = coord.toString
+
+	private def mark(visibleAsteroids: VisibleAsteroids, asteroids: Asteroids, currentCoord: Coordinate): Unit = {
 		if (asteroids.existsAt(currentCoord)) {
-			if (visibleMap.isUnknown(currentCoord)) {
-				visibleMap.markVisible(currentCoord)
+			if (visibleAsteroids.isUnknown(currentCoord)) {
+				visibleAsteroids.markVisible(currentCoord)
 			}
-			if (currentCoord.isSameWidth(asteroidCoord)) {
-				if (currentCoord.isBelow(asteroidCoord)) {
-					visibleMap.markInvisibleBelow(currentCoord)
-				} else {
-					visibleMap.markInvisibleAbove(currentCoord)
-				}
-			} else if (currentCoord.isSameHeight(asteroidCoord)) {
-				if (currentCoord.isRightOff(asteroidCoord)) {
-					visibleMap.markInvisibleRightOff(currentCoord)
-				} else {
-					visibleMap.markInvisibleLeftOff(currentCoord)
-				}
-			} else {
-				val rawTravel = currentCoord.minus(asteroidCoord)
-				val gcd = Math.abs(gcdResursive(rawTravel.x, rawTravel.y))
-				val minimumTravel = rawTravel.divide(gcd)
-				markInvisibleDiagonal(visibleMap, currentCoord.add(minimumTravel), minimumTravel)
-			}
+			val rawTravel = currentCoord.minus(coord)
+			val divisor = Math.abs(gcd(rawTravel.x, rawTravel.y))
+			val minimumTravel = rawTravel.divide(divisor)
+			markInvisibleForTravel(visibleAsteroids, currentCoord.add(minimumTravel), minimumTravel)
 		}
 	}
 
 	@scala.annotation.tailrec
-	private def gcdResursive(a: Int, b: Int): Int = {
-		if (b == 0) a else gcdResursive(b, a % b)
+	private def gcd(a: Int, b: Int): Int = {
+		if (b == 0) a else gcd(b, a % b)
 	}
 
 	@scala.annotation.tailrec
-	private def markInvisibleDiagonal(visibleMap: VisibilityMap, invisibleCoord: Coordinate, travel: Coordinate): Unit = {
-		if (visibleMap.isWithinBounds(invisibleCoord)) {
-			visibleMap.markInvisible(invisibleCoord)
-			markInvisibleDiagonal(visibleMap, invisibleCoord.add(travel), travel)
+	private def markInvisibleForTravel(visibleAsteroids: VisibleAsteroids, invisibleCoord: Coordinate, travel: Coordinate): Unit = {
+		if (visibleAsteroids.isWithinBounds(invisibleCoord)) {
+			visibleAsteroids.markInvisible(invisibleCoord)
+			markInvisibleForTravel(visibleAsteroids, invisibleCoord.add(travel), travel)
 		}
 	}
-
 }
 
-class Asteroids(val asteroids: List[Asteroid]) {
+class Asteroids(val asteroids: List[Asteroid], val width: Int, val height: Int) {
 
-	def existsAt(coordinate: Coordinate): Boolean = asteroids.exists(a => a.asteroidCoord.equals(coordinate))
+	def existsAt(coordinate: Coordinate): Boolean = asteroids.exists(a => a.coord.equals(coordinate))
 
-	def searchMonitoringAsteroid(width: Int, height: Int): (Asteroid, Int) = {
+	def searchMonitoringStation(): (Asteroid, Int) = {
 		asteroids
-				.map(a => Tuple2(a, a.constructVisibilityMap(this, width, height).countVisible()))
+				.map(a => Tuple2(a, a.getVisibleAsteroids(this).countVisible()))
 				.maxBy(tuple => tuple._2)
 	}
+
+	def remove(coordinates: List[Coordinate]): Asteroids = {
+		new Asteroids(asteroids.filter(a => !coordinates.contains(a.coord)), width, height)
+	}
+
 }
 
 object Asteroids {
 
 	def parse(input: String): Asteroids = {
-		new Asteroids(input.split("\n")
+		val lines = input.split("\n")
+		val asteroids = lines
 				.zipWithIndex
 				.flatMap(lineToAsteroids)
-				.toList)
+				.toList
+		new Asteroids(asteroids, lines.head.length, lines.length)
 	}
 
 	private def lineToAsteroids(lineWithIndex: (String, Int)): IndexedSeq[Asteroid] = {

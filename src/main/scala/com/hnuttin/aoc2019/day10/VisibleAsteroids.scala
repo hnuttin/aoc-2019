@@ -9,7 +9,31 @@ object Visibility extends Enumeration {
 	val UNKNOWN, VISIBLE, INVISIBLE, STATION = Value
 }
 
-class VisibilityMap(val map: Array[Array[Visibility]]) {
+class VisibleAsteroids(val map: Array[Array[Visibility]]) {
+
+	def anyVisible: Boolean = visibleCoordinates.nonEmpty
+
+	def getVisibleInQ1(coordinate: Coordinate): List[Coordinate] = {
+		visibleCoordinates.filter(c => c.x >= coordinate.x && c.y < coordinate.y)
+	}
+
+	def getVisibleInQ2(coordinate: Coordinate): List[Coordinate] = {
+		visibleCoordinates.filter(c => c.x > coordinate.x && c.y >= coordinate.y)
+	}
+
+	def getVisibleInQ3(coordinate: Coordinate): List[Coordinate] = {
+		visibleCoordinates.filter(c => c.x <= coordinate.x && c.y > coordinate.y)
+	}
+
+	def getVisibleInQ4(coordinate: Coordinate): List[Coordinate] = {
+		visibleCoordinates.filter(c => c.x < coordinate.x && c.y <= coordinate.y)
+	}
+
+	def visibleCoordinates: List[Coordinate] = {
+		map.zipWithIndex
+				.flatMap(line => line._1.zipWithIndex.filter(v => v._1 == Visibility.VISIBLE).map(v => asCoord(v._2, line._2)))
+				.toList
+	}
 
 	def isUnknown(coord: Coordinate): Boolean = map(coord.y)(coord.x) == Visibility.UNKNOWN
 
@@ -42,8 +66,8 @@ class VisibilityMap(val map: Array[Array[Visibility]]) {
 	}
 }
 
-object VisibilityMap {
-	def initialize(width: Int, height: Int): VisibilityMap = {
-		new VisibilityMap(Array.fill(height)(Array.fill(width)(Visibility.UNKNOWN)))
+object VisibleAsteroids {
+	def initialize(width: Int, height: Int): VisibleAsteroids = {
+		new VisibleAsteroids(Array.fill(height)(Array.fill(width)(Visibility.UNKNOWN)))
 	}
 }
