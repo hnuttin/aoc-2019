@@ -28,47 +28,46 @@ private class Parameters(modes: Array[ParameterMode]) {
 }
 
 private[intcode] trait Opcode {
-	def operate(program: IntcodeProgram, inputs: List[Long]): List[Long]
+	def operate(program: IntcodeProgram, inputSupplier: () => Long, outputHandler: Long => Unit): Unit
 }
 
 private abstract class MathOpcode(val parameters: Parameters) extends Opcode {
-	def mathOperate(program: IntcodeProgram, operator: (Long, Long) => Long, inputs: List[Long]): List[Long] = {
+	def mathOperate(program: IntcodeProgram, operator: (Long, Long) => Long): Unit = {
 		val value1 = parameters.getAsValue(program, 1)
 		val value2 = parameters.getAsValue(program, 2)
 		val calculatedValue = operator.apply(value1, value2)
 		val positionToReplace = parameters.getAsPosition(program, 3)
 		program.memory += positionToReplace -> calculatedValue
 		program.instructionPointer += 4
-		inputs
 	}
 }
 
 private class AddOpcode(parameters: Parameters) extends MathOpcode(parameters) {
-	override def operate(program: IntcodeProgram, inputs: List[Long]): List[Long] = {
-		mathOperate(program, (x, y) => x + y, inputs)
+	override def operate(program: IntcodeProgram, inputSupplier: () => Long, outputHandler: Long => Unit): Unit = {
+		mathOperate(program, (x, y) => x + y)
 	}
 }
 
 private class MultiplyOpcode(parameters: Parameters) extends MathOpcode(parameters) {
-	override def operate(program: IntcodeProgram, inputs: List[Long]): List[Long] = {
-		mathOperate(program, (x, y) => x * y, inputs)
+	override def operate(program: IntcodeProgram, inputSupplier: () => Long, outputHandler: Long => Unit): Unit = {
+		mathOperate(program, (x, y) => x * y)
 	}
 }
 
 private class LessThanOpcode(parameters: Parameters) extends MathOpcode(parameters) {
-	override def operate(program: IntcodeProgram, inputs: List[Long]): List[Long] = {
-		mathOperate(program, (x, y) => if (x < y) 1 else 0, inputs)
+	override def operate(program: IntcodeProgram, inputSupplier: () => Long, outputHandler: Long => Unit): Unit = {
+		mathOperate(program, (x, y) => if (x < y) 1 else 0)
 	}
 }
 
 private class EqualsOpcode(parameters: Parameters) extends MathOpcode(parameters) {
-	override def operate(program: IntcodeProgram, inputs: List[Long]): List[Long] = {
-		mathOperate(program, (x, y) => if (x == y) 1 else 0, inputs)
+	override def operate(program: IntcodeProgram, inputSupplier: () => Long, outputHandler: Long => Unit): Unit = {
+		mathOperate(program, (x, y) => if (x == y) 1 else 0)
 	}
 }
 
 abstract private class JumpOpcode(val parameters: Parameters) extends Opcode {
-	override def operate(program: IntcodeProgram, inputs: List[Long]): List[Long] = {
+	override def operate(program: IntcodeProgram, inputSupplier: () => Long, outputHandler: Long => Unit): Unit = {
 		val value = parameters.getAsValue(program, 1)
 		if (shouldJump(value)) {
 			val newPointerPosition = parameters.getAsValue(program, 2)
@@ -76,7 +75,6 @@ abstract private class JumpOpcode(val parameters: Parameters) extends Opcode {
 		} else {
 			program.instructionPointer += 3
 		}
-		inputs
 	}
 
 	protected def shouldJump(value: Long): Boolean
@@ -91,33 +89,29 @@ private class JumpIfFalseOpcode(parameters: Parameters) extends JumpOpcode(param
 }
 
 private class RelativeBaseOpcode(val parameters: Parameters) extends Opcode {
-	override def operate(program: IntcodeProgram, inputs: List[Long]): List[Long] = {
+	override def operate(program: IntcodeProgram, inputSupplier: () => Long, outputHandler: Long => Unit): Unit = {
 		program.relativeBase += parameters.getAsValue(program, 1)
 		program.instructionPointer += 2
-		inputs
 	}
 }
 
 private class InputOpCode(val parameters: Parameters) extends Opcode {
-	override def operate(program: IntcodeProgram, inputs: List[Long]): List[Long] = {
-		program.memory += parameters.getAsPosition(program, 1) -> inputs.head
+	override def operate(program: IntcodeProgram, inputSupplier: () => Long, outputHandler: Long => Unit): Unit = {
+		program.memory += parameters.getAsPosition(program, 1) -> inputSupplier.apply()
 		program.instructionPointer += 2
-		inputs.tail
 	}
 }
 
 private class OutputOpCode(val parameters: Parameters) extends Opcode {
-	override def operate(program: IntcodeProgram, inputs: List[Long]): List[Long] = {
-		program._outputs = program._outputs.appended(parameters.getAsValue(program, 1))
+	override def operate(program: IntcodeProgram, inputSupplier: () => Long, outputHandler: Long => Unit): Unit = {
+		outputHandler.apply(parameters.getAsValue(program, 1))
 		program.instructionPointer += 2
-		inputs
 	}
 }
 
 private class HaltingOpCode extends Opcode {
-	override def operate(program: IntcodeProgram, inputs: List[Long]): List[Long] = {
+	override def operate(program: IntcodeProgram, inputSupplier: () => Long, outputHandler: Long => Unit): Unit = {
 		program._halted = true
-		inputs
 	}
 }
 

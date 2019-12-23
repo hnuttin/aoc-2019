@@ -8,48 +8,20 @@ class IntcodeProgram(private[intcode] var memory: Map[Long, Long]) {
 
 	private[intcode] var instructionPointer = 0L
 	private[intcode] var relativeBase = 0L
-	private[intcode] var _outputs: List[Long] = List()
 
 	private[intcode] var _halted = false
 
 	def halted: Boolean = _halted
 
-	def outputs: List[Long] = _outputs
-
-	def executeUntilHalted(): Unit = {
-		executeUntilHalted(List())
-	}
-
-	def executeUntilHalted(inputs: List[Long]): Unit = {
-		executeUntilHaltedRecursive(inputs)
+	def execute(inputSupplier: () => Long, outputHandler: Long => Unit): Unit = {
+		executeRecursive(inputSupplier, outputHandler)
 	}
 
 	@scala.annotation.tailrec
-	private def executeUntilHaltedRecursive(inputs: List[Long]): List[Long] = {
-		val newInputs = Opcode.parse(memory(instructionPointer.intValue)).operate(this, inputs)
-		if (halted) {
-			inputs
-		} else {
-			executeUntilHaltedRecursive(newInputs)
-		}
-	}
-
-	def executeUntilOutputOrHalted(): Unit = {
-		executeUntilOutputOrHalted(List())
-	}
-
-	def executeUntilOutputOrHalted(inputs: List[Long]): Unit = {
-		executeUntilOutputOrHaltedRecursive(inputs)
-	}
-
-	@scala.annotation.tailrec
-	private def executeUntilOutputOrHaltedRecursive(inputs: List[Long]): List[Long] = {
-		val outputsBefore = _outputs
-		val newInputs = Opcode.parse(memory(instructionPointer.intValue)).operate(this, inputs)
-		if (halted || outputsBefore.length < _outputs.length) {
-			newInputs
-		} else {
-			executeUntilOutputOrHaltedRecursive(newInputs)
+	private def executeRecursive(inputSupplier: () => Long, outputHandler: Long => Unit): Unit = {
+		Opcode.parse(memory(instructionPointer.intValue)).operate(this, inputSupplier, outputHandler)
+		if (!halted) {
+			executeRecursive(inputSupplier, outputHandler)
 		}
 	}
 
@@ -93,4 +65,8 @@ object IntcodeProgram {
 	private def foldToMemory(accum: HashMap[Long, Long], tupple: Tuple2[Long, Int]): HashMap[Long, Long] = {
 		accum + (tupple._2.longValue -> tupple._1)
 	}
+
+	def emptyInputSupplier: () => Long = () => 0L
+
+	def noopOutputHandler: Long => Unit = (_: Long) => ()
 }

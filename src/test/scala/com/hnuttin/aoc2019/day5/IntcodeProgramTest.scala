@@ -1,6 +1,7 @@
 package com.hnuttin.aoc2019.day5
 
 import com.hnuttin.aoc2019.day5.intcode.IntcodeProgram
+import com.hnuttin.aoc2019.day5.intcode.IntcodeProgram.{emptyInputSupplier, noopOutputHandler}
 import org.scalatest.FunSuite
 
 class IntcodeProgramTest extends FunSuite {
@@ -70,12 +71,12 @@ class IntcodeProgramTest extends FunSuite {
 	}
 
 	test("1002,4,3,4,33") {
-		IntcodeProgram.fromIntcode(List(1002, 4, 3, 4, 33)).executeUntilHalted(List())
+		IntcodeProgram.fromIntcode(List(1002, 4, 3, 4, 33)).execute(emptyInputSupplier, noopOutputHandler)
 	}
 
 	private def assertProgram(intcode: List[Int], input: Int, output: Int): Any = {
 		val program = IntcodeProgram.fromIntcode(intcode)
-		program.executeUntilHalted(List(input))
+		program.execute(() => input, noopOutputHandler)
 		assert(program.outputs == List(output))
 	}
 
