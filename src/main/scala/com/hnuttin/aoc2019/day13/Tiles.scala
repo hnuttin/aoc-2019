@@ -23,11 +23,20 @@ class Tiles {
 
 	def draw(): Unit = {
 		List.range(minY, maxY + 1).reverse.foreach(y => drawLine(y))
+		println()
 	}
 
 	private def drawLine(y: Int): Unit = {
-		List.range(minX, maxX + 1).foreach(x => drawTile(tiles(y)(x)))
+		List.range(minX, maxX + 1).foreach(x => drawTile(getTile(x, y)))
 		println()
+	}
+
+	private def getTile(x: Int, y: Int): Tile = {
+		try {
+			tiles(y)(x)
+		} catch {
+			case _: NoSuchElementException => Tile.EMPTY
+		}
 	}
 
 	private def drawTile(tile: Tile): Unit = tile match {
@@ -39,19 +48,19 @@ class Tiles {
 	}
 
 	private def minX: Int = {
-		tiles.flatMap(line => line._2).keys.min
+		if (tiles.values.isEmpty) 0 else tiles.values.head.keys.min
 	}
 
 	private def maxX: Int = {
-		tiles.flatMap(line => line._2).keys.max
+		if (tiles.values.isEmpty) 0 else tiles.values.head.keys.max
 	}
 
 	private def minY: Int = {
-		tiles.keys.min
+		if (tiles.isEmpty) 0 else tiles.keys.min
 	}
 
 	private def maxY: Int = {
-		tiles.keys.max
+		if (tiles.isEmpty) 0 else tiles.keys.max
 	}
 
 }
